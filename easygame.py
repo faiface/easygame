@@ -7,13 +7,31 @@ def degrees(d):
     import math
     return d / 180 * math.pi
 
+def rotate(vector, angle):
+    """Rotate a vector (x, y) by an angle in radians."""
+    import math
+    x, y = vector
+    sin, cos = math.sin(angle), math.cos(angle)
+    return (
+        cos * x - sin * y,
+        sin * x + cos * y,
+    )
+
 class EasyGameError(Exception):
     """All exceptions raised from this module are of this type."""
     pass
 
+class _Camera:
+    def __init__(self):
+        self.center = (0, 0)
+        self.position = (0, 0)
+        self.rotation = 0
+        self.zoom = 1
+
 class _Context:
     _win = None
     _events = []
+    _camera = _Camera()
 
 _ctx = _Context()
 
@@ -176,6 +194,7 @@ def open_window(title, width, height, fps=60):
     _ctx._win = pyglet.window.Window(caption=title, width=width, height=height)
     pyglet.clock.set_fps_limit(fps)
     _ctx._win.switch_to()
+    _ctx._camera = _Camera()
 
     @_ctx._win.event
     def on_close():
@@ -307,7 +326,7 @@ def load_sheet(path, frame_width, frame_height):
     return frames
 
 def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
-    """Draw an image to the window.
+    """Draw an image to the window, respecting the current camera settings.
 
     Arguments:
     image    -- The image to draw. (Obtained from load_image or load_sheet)
@@ -316,9 +335,18 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
     rotation -- Rotation of the image around the anchor in radians. (Defaults to 0.)
     scale    -- Scale of the image around the anchor. (Defaults to 1.)
     """
+    global _ctx
     import math
     if anchor is None:
         anchor = image.center
+
+    position = (position[0]-_ctx._camera.position[0], position[1]-_ctx._camera.position[1])
+    position = rotate(position, -_ctx._camera.rotation)
+    position = (position[0]*_ctx._camera.zoom, position[1]*_ctx._camera.zoom)
+    position = (position[0]+_ctx._camera.center[0], position[1]+_ctx._camera.center[1])
+    rotation -= _ctx._camera.rotation
+    scale *= _ctx._camera.zoom
+
     image._img.anchor_x, image._img.anchor_y = anchor
     image._sprite.update(
         x=position[0],
@@ -327,3 +355,41 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
         scale=scale,
     )
     image._sprite.draw()
+
+def set_camera(center=None, position=None, rotation=None, zoom=None):
+    """Set properties of the camera. Only properties you set will be changed.
+
+    Arguments:
+    center   -- Position of the center of the camera on the screen.
+    position -- The world position that the camera is looking at.
+    rotation -- Rotation of the camera around its center.
+    zoom     -- Zoom/scale of the camera. Value of 1 is no zoom, value of 2 is twice-scaled, etc.
+    """
+    global _ctx
+    if center is not None:
+        _ctx._camera.center = center
+    if position is not None:
+        _ctx._camera.position = position
+    if rotation is not None:
+        _ctx._camera.rotation = rotate
+    if zoom is not None:
+        _ctx._camera.zoom = zoom
+
+def move_camera(position=None, rotation=None, zoom=None):
+    """Change properties of the camera relative to its current properties.
+
+    Arguments:
+    position  -- Vector to add to the current position.
+    rotattion -- Angle to add to the current rotation.
+    zoom      -- Number to multiply by the current zoom.
+    """
+    global _ctx
+    if position is not None:
+        _ctx._camera.position = (
+            _ctx._camera.position[0] + position[0],
+            _ctx._camera.position[1] + position[1],
+        )
+    if rotation is not None:
+        _ctx._camera.rotation += rotation
+    if zoom is not None:
+        _ctx._camera.zoom *= zoom
