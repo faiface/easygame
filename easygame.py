@@ -312,7 +312,7 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
     Arguments:
     image    -- The image to draw. (Obtained from load_image or load_sheet)
     position -- Anchor's position on the screen. (Defaults to 0, 0.)
-    anchor   -- Anchor's position relative to the bottom-left corner of the image (Defaults to the center.)
+    anchor   -- Anchor's position relative to the bottom-left corner of the image. (Defaults to the center.)
     rotation -- Rotation of the image around the anchor in radians. (Defaults to 0.)
     scale    -- Scale of the image around the anchor. (Defaults to 1.)
     """
