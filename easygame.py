@@ -161,7 +161,7 @@ class MouseUpEvent:
         self.button = button
 
 def open_window(title, width, height, fps=60):
-    """Opens a window with the specified parameters. Only one window can be open at any time.
+    """Open a window with the specified parameters. Only one window can be open at any time.
 
     Arguments:
     title  -- Text at the top of the window.
@@ -225,7 +225,7 @@ def open_window(title, width, height, fps=60):
         _ctx._events.append(MouseUpEvent(x, y, button))
 
 def close_window():
-    """Closes the window. Raises an exception if no window is open."""
+    """Close the window. Raises an exception if no window is open."""
     global _ctx
     if _ctx._win is None:
         raise EasyGameError('window not open')
@@ -233,7 +233,7 @@ def close_window():
     _ctx._win = None
 
 def poll_events():
-    """Returns a list of events that happened since the last call to this function."""
+    """Return a list of events that happened since the last call to this function."""
     global _ctx
     import pyglet
     if _ctx._win is None:
@@ -243,7 +243,7 @@ def poll_events():
     return list(_ctx._events)
 
 def next_frame():
-    """Shows the content of the window and waits until it's time for the next frame."""
+    """Show the content of the window and waits until it's time for the next frame."""
     global _ctx
     import pyglet
     if _ctx._win is None:
@@ -252,7 +252,7 @@ def next_frame():
     pyglet.clock.tick()
 
 def fill(r, g, b):
-    """Fills the whole window with a single color.
+    """Fill the whole window with a single color.
     
     The r, g, b components of the color should be between 0 and 1.
     """
@@ -280,7 +280,7 @@ class _Image:
         return (self._img.width//2, self._img.height//2)
 
 def load_image(path):
-    """Loads an image from the specified path. PNG, JPEG, and many more formats are supported.
+    """Load an image from the specified path. PNG, JPEG, and many more formats are supported.
 
     Arguments:
     path -- Path to the image file. (For example 'images/crying_baby.png'.)
@@ -289,7 +289,7 @@ def load_image(path):
     return _Image(pyglet.resource.image(path))
 
 def load_sheet(path, frame_width, frame_height):
-    """Loads an sprite sheet from the specified path and slices it into frames of the specified size.
+    """Load a sprite sheet from the specified path and slices it into frames of the specified size.
 
     Returns the list of images corresponding to the individual slices.
 
@@ -307,7 +307,7 @@ def load_sheet(path, frame_width, frame_height):
     return frames
 
 def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
-    """Draws an image to the window.
+    """Draw an image to the window.
 
     Arguments:
     image    -- The image to draw. (Obtained from load_image or load_sheet)
