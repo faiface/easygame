@@ -1,8 +1,14 @@
 def degrees(d):
+    """Convert degrees to radians.
+
+    Arguments:
+    d -- Angle in degrees.
+    """
     import math
     return d / 180 * math.pi
 
 class EasyGameError(Exception):
+    """All exceptions raised from this module are of this type."""
     pass
 
 class _Context:
@@ -12,6 +18,7 @@ class _Context:
 _ctx = _Context()
 
 class CloseEvent:
+    """Happens when user clicks the X button on the window."""
     pass
 
 _symbol_dict = None
@@ -76,18 +83,49 @@ def _symbol_to_string(key):
     return _symbol_dict[key]
 
 class KeyDownEvent:
+    """Happens when user pressed a key on the keyboard.
+
+    Fields:
+    key -- String representation of the pressed key.
+           These are: 'A' ... 'Z',
+                      '0' ... '9',
+                      'SPACE', 'ENTER', 'BACKSPACE', 'ESCAPE',
+                      'LEFT', 'RIGHT', 'UP, 'DOWN'.
+    """
     def __init__(self, key):
         self.key = key
 
 class KeyUpEvent:
+    """Happens when user releases a key on the keyboard.
+
+    Fields:
+    key -- String representation of the released key.
+           These are: 'A' ... 'Z',
+                      '0' ... '9',
+                      'SPACE', 'ENTER', 'BACKSPACE', 'ESCAPE',
+                      'LEFT', 'RIGHT', 'UP, 'DOWN'.
+    """
     def __init__(self, key):
         self.key = key
 
 class TextEvent:
+    """Happens when user types a text on the keyboard.
+
+    Fields:
+    text -- A string containing the typed text.
+    """
     def __init__(self, text):
         self.text = text
 
 class MouseMoveEvent:
+    """Happens when user moves the mouse.
+
+    Fields:
+    x  -- The current X coordinate of the mouse.
+    y  -- The current Y coordinate of the mouse.
+    dx -- Difference from the previous X coordinate.
+    dy -- Difference from the previous Y coordinate.
+    """
     def __init__(self, x, y, dx, dy):
         self.x = x
         self.y = y
@@ -95,18 +133,42 @@ class MouseMoveEvent:
         self.dy = dy
 
 class MouseDownEvent:
+    """Happens when user presses a mouse button.
+
+    Fields:
+    x      -- The current X coordinate of the mouse.
+    y      -- The current Y coordinate of the mouse.
+    button -- String representation of the pressed button.
+              These are: 'LEFT', 'RIGHT', 'MIDDLE'.
+    """
     def __init__(self, x, y, button):
         self.x = x
         self.y = y
         self.button = button
 
 class MouseUpEvent:
+    """Happens when user releases a mouse button.
+
+    Fields:
+    x      -- The current X coordinate of the mouse.
+    y      -- The current Y coordinate of the mouse.
+    button -- String representation of the released button.
+              These are: 'LEFT', 'RIGHT', 'MIDDLE'.
+    """
     def __init__(self, x, y, button):
         self.x = x
         self.y = y
         self.button = button
 
 def open_window(title, width, height, fps=60):
+    """Opens a window with the specified parameters. Only one window can be open at any time.
+
+    Arguments:
+    title  -- Text at the top of the window.
+    width  -- Width of the window in pixels.
+    height -- Height of the window in pixels.
+    fps    -- Maximum number of frames per second. (Defaults to 60.)
+    """
     global _ctx
     import pyglet
     if _ctx._win is not None:
@@ -163,6 +225,7 @@ def open_window(title, width, height, fps=60):
         _ctx._events.append(MouseUpEvent(x, y, button))
 
 def close_window():
+    """Closes the window. Raises an exception if no window is open."""
     global _ctx
     if _ctx._win is None:
         raise EasyGameError('window not open')
@@ -170,6 +233,7 @@ def close_window():
     _ctx._win = None
 
 def poll_events():
+    """Returns a list of events that happened since the last call to this function."""
     global _ctx
     import pyglet
     if _ctx._win is None:
@@ -179,6 +243,7 @@ def poll_events():
     return list(_ctx._events)
 
 def next_frame():
+    """Shows the content of the window and waits until it's time for the next frame."""
     global _ctx
     import pyglet
     if _ctx._win is None:
@@ -187,6 +252,10 @@ def next_frame():
     pyglet.clock.tick()
 
 def fill(r, g, b):
+    """Fills the whole window with a single color.
+    
+    The r, g, b components of the color should be between 0 and 1.
+    """
     global _ctx
     import pyglet
     pyglet.gl.glClearColor(r, g, b, 1)
@@ -211,10 +280,24 @@ class _Image:
         return (self._img.width//2, self._img.height//2)
 
 def load_image(path):
+    """Loads an image from the specified path. PNG, JPEG, and many more formats are supported.
+
+    Arguments:
+    path -- Path to the image file. (For example 'images/crying_baby.png'.)
+    """
     import pyglet
     return _Image(pyglet.resource.image(path))
 
 def load_sheet(path, frame_width, frame_height):
+    """Loads an sprite sheet from the specified path and slices it into frames of the specified size.
+
+    Returns the list of images corresponding to the individual slices.
+
+    Arguments:
+    path         -- Path to the sprite sheet.
+    frame_width  -- Width of a single frame.
+    frame_height -- Height of a single frame.
+    """
     import pyglet
     img = pyglet.resource.image(path)
     frames = []
@@ -224,6 +307,15 @@ def load_sheet(path, frame_width, frame_height):
     return frames
 
 def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
+    """Draws an image to the window.
+
+    Arguments:
+    image    -- The image to draw. (Obtained from load_image or load_sheet)
+    position -- Anchor's position on the screen. (Defaults to 0, 0.)
+    anchor   -- Anchor's position relative to the bottom-left corner of the image (Defaults to the center.)
+    rotation -- Rotation of the image around the anchor in radians. (Defaults to 0.)
+    scale    -- Scale of the image around the anchor. (Defaults to 1.)
+    """
     import math
     if anchor is None:
         anchor = image.center
