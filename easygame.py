@@ -33,6 +33,7 @@ class _Context:
     _events = []
     _camera = _Camera((0, 0), (0, 0), 0, 1)
     _saved_cameras = []
+    _channels = {}
 
 _ctx = _Context()
 
@@ -192,11 +193,13 @@ def open_window(title, width, height, fps=60):
     import pyglet
     if _ctx._win is not None:
         raise EasyGameError('window already open')
+    pyglet.options['audio'] = ('openal', 'pulse', 'directsound', 'silent')
     _ctx._win = pyglet.window.Window(caption=title, width=width, height=height)
     pyglet.clock.set_fps_limit(fps)
     _ctx._win.switch_to()
-    _ctx._camera = _Camera()
+    _ctx._camera = _Camera((0, 0), (0, 0), 0, 1)
     _ctx._saved_cameras = []
+    _ctx._channels = {}
 
     @_ctx._win.event
     def on_close():
@@ -414,3 +417,53 @@ def restore_camera():
     if len(_ctx._saved_cameras) == 0:
         raise EasyGameError('no saved camera')
     _ctx._camera = _ctx._saved_cameras.pop(-1)
+
+class _Audio:
+    def __init__(self, snd):
+        self._snd = snd
+
+def load_audio(path, streaming=False):
+    """Load an audio from the specified path.
+
+    Returns the loaded audio.
+
+    Arguments:
+    path      -- Path to the audio file. (For example 'sounds/crying_baby.wav'.)
+    streaming -- Whether to stream the file directly from the disk, or load it to the memory instead.
+    """
+    import pyglet
+    snd = pyglet.resource.media(path, streaming=streaming)
+    return _Audio(snd)
+
+def play_audio(audio, channel=0, loop=False, volume=1):
+    """Play an audio on the specified channel.
+
+    There's infinite number of channels. Playing an audio on a channel stops previous playback
+    on this channel. Therefore, at most one audio can play on one channel at any time.
+
+    To stop playback on a channel, play a None audio:
+      play_audio(None, channel=0)
+
+    Arguments:
+    audio   -- The audio to be played.
+    channel -- The channel index.
+    loop    -- If True, playback will repeat forever, or until stopped.
+    volume  -- 0 for mute, 1 for normal volume.
+    """
+    global _ctx
+    import pyglet
+    if channel in _ctx._channels:
+        _ctx._channels[channel].delete()
+    if audio is None:
+        return
+    player = pyglet.media.Player()
+    if loop:
+        looper = pyglet.media.SourceGroup(audio._snd.audio_format, None)
+        looper.loop = True
+        looper.queue(audio._snd)
+        player.queue(looper)
+    else:
+        player.queue(audio._snd)
+    player.volume = volume
+    _ctx._channels[channel] = player
+    player.play()
