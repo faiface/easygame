@@ -22,16 +22,17 @@ class EasyGameError(Exception):
     pass
 
 class _Camera:
-    def __init__(self):
-        self.center = (0, 0)
-        self.position = (0, 0)
-        self.rotation = 0
-        self.zoom = 1
+    def __init__(self, center, position, rotation, zoom):
+        self.center = center
+        self.position = position
+        self.rotation = rotation
+        self.zoom = zoom
 
 class _Context:
     _win = None
     _events = []
-    _camera = _Camera()
+    _camera = _Camera((0, 0), (0, 0), 0, 1)
+    _saved_cameras = []
 
 _ctx = _Context()
 
@@ -195,6 +196,7 @@ def open_window(title, width, height, fps=60):
     pyglet.clock.set_fps_limit(fps)
     _ctx._win.switch_to()
     _ctx._camera = _Camera()
+    _ctx._saved_cameras = []
 
     @_ctx._win.event
     def on_close():
@@ -301,6 +303,8 @@ class _Image:
 def load_image(path):
     """Load an image from the specified path. PNG, JPEG, and many more formats are supported.
 
+    Returns the loaded image.
+
     Arguments:
     path -- Path to the image file. (For example 'images/crying_baby.png'.)
     """
@@ -393,3 +397,20 @@ def move_camera(position=None, rotation=None, zoom=None):
         _ctx._camera.rotation += rotation
     if zoom is not None:
         _ctx._camera.zoom *= zoom
+
+def save_camera():
+    """Saves the current camera settings."""
+    global _ctx
+    _ctx._saved_cameras.append(_Camera(
+        _ctx._camera.center,
+        _ctx._camera.position,
+        _ctx._camera.rotation,
+        _ctx._camera.zoom,
+    ))
+
+def restore_camera():
+    """Restores the most recently saved and not yet restored camera settings."""
+    global _ctx
+    if len(_ctx._saved_cameras) == 0:
+        raise EasyGameError('no saved camera')
+    _ctx._camera = _ctx._saved_cameras.pop(-1)
