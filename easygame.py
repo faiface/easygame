@@ -201,6 +201,9 @@ def open_window(title, width, height, fps=60):
     _ctx._saved_cameras = []
     _ctx._channels = {}
 
+    pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
+    pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
+
     @_ctx._win.event
     def on_close():
         global _ctx
@@ -332,7 +335,16 @@ def load_sheet(path, frame_width, frame_height):
             frames.append(img.get_region(x, y, frame_width, frame_height))
     return frames
 
-def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
+def _project_point_by_camera(point):
+    global _ctx
+    x, y = point
+    x, y = x-_ctx._camera.position[0], y-_ctx._camera.position[1]
+    x, y = rotate((x, y), -_ctx._camera.rotation)
+    x, y = x*_ctx._camera.zoom, y*_ctx._camera.zoom
+    x, y = x+_ctx._camera.center[0], y+_ctx._camera.center[1]
+    return (x, y)
+
+def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity=1):
     """Draw an image to the window, respecting the current camera settings.
 
     Arguments:
@@ -347,10 +359,7 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
     if anchor is None:
         anchor = image.center
 
-    position = (position[0]-_ctx._camera.position[0], position[1]-_ctx._camera.position[1])
-    position = rotate(position, -_ctx._camera.rotation)
-    position = (position[0]*_ctx._camera.zoom, position[1]*_ctx._camera.zoom)
-    position = (position[0]+_ctx._camera.center[0], position[1]+_ctx._camera.center[1])
+    position = _project_point_by_camera(position)
     rotation -= _ctx._camera.rotation
     scale *= _ctx._camera.zoom
 
@@ -361,7 +370,27 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1):
         rotation=-rotation/math.pi*180,
         scale=scale,
     )
+    image._sprite.opacity = int(opacity * 255)
     image._sprite.draw()
+
+def draw_polygon(*points, color=(1, 1, 1, 1)):
+    """Draw a convex polygon.
+
+    Arguments:
+    points -- List of points of the polygon. (Is taken by variadic arguments.)
+    color  -- Color of the polygon. Components are: red, green, blue, alpha. 
+    """
+    global _ctx
+    import pyglet
+    vertices = []
+    for i in range(len(points)):
+        x, y = _project_point_by_camera(points[i])
+        vertices.append(x)
+        vertices.append(y)
+    pyglet.graphics.draw(len(points), pyglet.gl.GL_POLYGON,
+        ('v2f', vertices),
+        ('c4f', color * len(points)),
+    )
 
 def set_camera(center=None, position=None, rotation=None, zoom=None):
     """Set properties of the camera. Only properties you set will be changed.
