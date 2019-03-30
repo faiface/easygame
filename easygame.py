@@ -180,6 +180,18 @@ class MouseUpEvent:
         self.y = y
         self.button = button
 
+def _update_camera():
+    global _ctx
+    import pyglet, math
+    pyglet.gl.glViewport(0, 0, _ctx._win.width, _ctx._win.height)
+    pyglet.gl.glMatrixMode(pyglet.gl.GL_PROJECTION)
+    pyglet.gl.glLoadIdentity()
+    pyglet.gl.glOrtho(0, _ctx._win.width, 0, _ctx._win.height, -1, 1)
+    pyglet.gl.glTranslatef(_ctx._camera.center[0], _ctx._camera.center[1], 0)
+    pyglet.gl.glRotatef(-_ctx._camera.rotation/math.pi*180, 0, 0, 1)
+    pyglet.gl.glScalef(_ctx._camera.zoom, _ctx._camera.zoom, 1)
+    pyglet.gl.glTranslatef(-_ctx._camera.position[0], -_ctx._camera.position[1], 0)
+
 def open_window(title, width, height, fps=60):
     """Open a window with the specified parameters. Only one window can be open at any time.
 
@@ -203,6 +215,8 @@ def open_window(title, width, height, fps=60):
 
     pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
     pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
+    _update_camera()
+    _ctx._win.dispatch_events()
 
     @_ctx._win.event
     def on_close():
@@ -280,7 +294,7 @@ def next_frame():
 
 def fill(r, g, b):
     """Fill the whole window with a single color.
-    
+
     The r, g, b components of the color should be between 0 and 1.
     """
     global _ctx
@@ -335,15 +349,6 @@ def load_sheet(path, frame_width, frame_height):
             frames.append(img.get_region(x, y, frame_width, frame_height))
     return frames
 
-def _project_point_by_camera(point):
-    global _ctx
-    x, y = point
-    x, y = x-_ctx._camera.position[0], y-_ctx._camera.position[1]
-    x, y = rotate((x, y), -_ctx._camera.rotation)
-    x, y = x*_ctx._camera.zoom, y*_ctx._camera.zoom
-    x, y = x+_ctx._camera.center[0], y+_ctx._camera.center[1]
-    return (x, y)
-
 def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity=1):
     """Draw an image to the window, respecting the current camera settings.
 
@@ -358,10 +363,6 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity
     import math
     if anchor is None:
         anchor = image.center
-
-    position = _project_point_by_camera(position)
-    rotation -= _ctx._camera.rotation
-    scale *= _ctx._camera.zoom
 
     image._img.anchor_x, image._img.anchor_y = anchor
     image._sprite.update(
@@ -383,10 +384,9 @@ def draw_polygon(*points, color=(1, 1, 1, 1)):
     global _ctx
     import pyglet
     vertices = []
-    for i in range(len(points)):
-        x, y = _project_point_by_camera(points[i])
-        vertices.append(x)
-        vertices.append(y)
+    for pt in points:
+        vertices.append(pt[0])
+        vertices.append(pt[1])
     pyglet.graphics.draw(len(points), pyglet.gl.GL_POLYGON,
         ('v2f', vertices),
         ('c4f', color * len(points)),
@@ -410,6 +410,7 @@ def set_camera(center=None, position=None, rotation=None, zoom=None):
         _ctx._camera.rotation = rotate
     if zoom is not None:
         _ctx._camera.zoom = zoom
+    _update_camera()
 
 def move_camera(position=None, rotation=None, zoom=None):
     """Change properties of the camera relative to its current properties.
@@ -429,6 +430,7 @@ def move_camera(position=None, rotation=None, zoom=None):
         _ctx._camera.rotation += rotation
     if zoom is not None:
         _ctx._camera.zoom *= zoom
+    _update_camera()
 
 def save_camera():
     """Saves the current camera settings."""
@@ -446,6 +448,7 @@ def restore_camera():
     if len(_ctx._saved_cameras) == 0:
         raise EasyGameError('no saved camera')
     _ctx._camera = _ctx._saved_cameras.pop(-1)
+    _update_camera()
 
 class _Audio:
     def __init__(self, snd):
