@@ -34,6 +34,7 @@ class _Context:
     _camera = _Camera((0, 0), (0, 0), 0, 1)
     _saved_cameras = []
     _channels = {}
+    _fonts = {}
 
 _ctx = _Context()
 
@@ -212,6 +213,7 @@ def open_window(title, width, height, fps=60):
     _ctx._camera = _Camera((0, 0), (0, 0), 0, 1)
     _ctx._saved_cameras = []
     _ctx._channels = {}
+    _ctx._fonts = {}
 
     pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
     pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
@@ -274,7 +276,32 @@ def close_window():
     _ctx._win = None
 
 def poll_events():
-    """Return a list of events that happened since the last call to this function."""
+    """Return a list of events that happened since the last call to this function.
+
+    There are 7 types of events:
+    CloseEvent, KeyDownEvent, KeyUpEvent, TextEvent, MouseMoveEvent, MouseDownEvent, MouseUpEvent.
+
+    CloseEvent has no fields.
+
+    Both KeyUpEvent and KeyDownEvent have a field called key, which contains a string representation
+    of the pressed/released key. These are:
+    - 'A' ... 'Z'
+    - '0' ... '9'
+    - 'SPACE', 'ENTER', 'BACKSPACE', 'ESCAPE'
+    - 'LEFT', 'RIGHT', 'UP, 'DOWN'.
+
+    TextEvent has one field: text. This field contains a string of text that has been typed
+    on the keyboard.
+
+    All mouse events have fields x and y, telling the current mouse position.
+
+    MouseMoveEvent has additional dx, dy fields telling the difference of the current mouse
+    position from the previous one.
+
+    MouseDownEvent and MouseUpEvent have an additional button field, which contains a string
+    representation of the pressed/released mouse button. These are:
+    - 'LEFT', 'RIGHT', 'MIDDLE'.
+    """
     global _ctx
     import pyglet
     if _ctx._win is None:
@@ -299,6 +326,8 @@ def fill(r, g, b):
     """
     global _ctx
     import pyglet
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
     pyglet.gl.glClearColor(r, g, b, 1)
     _ctx._win.clear()
 
@@ -361,6 +390,9 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity
     """
     global _ctx
     import math
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
+
     if anchor is None:
         anchor = image.center
 
@@ -375,7 +407,7 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity
     image._sprite.draw()
 
 def draw_polygon(*points, color=(1, 1, 1, 1)):
-    """Draw a convex polygon.
+    """Draw a convex polygon, respecting the current camera settings.
 
     Arguments:
     points -- List of points of the polygon. (Is taken by variadic arguments.)
@@ -383,6 +415,8 @@ def draw_polygon(*points, color=(1, 1, 1, 1)):
     """
     global _ctx
     import pyglet
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
     vertices = []
     for pt in points:
         vertices.append(pt[0])
@@ -391,6 +425,32 @@ def draw_polygon(*points, color=(1, 1, 1, 1)):
         ('v2f', vertices),
         ('c4f', color * len(points)),
     )
+
+def draw_text(text, font, size, position=(0, 0), color=(1, 1, 1, 1), bold=False, italic=False):
+    """Draw text using the selected font, respecting the current camera settings.
+
+    Arguments:
+    text     -- String to draw.
+    font     -- Name of the font to use. (For example: 'Times New Roman' or 'Courier New'.)
+    size     -- Size of the font in pixels.
+    position -- Position of the bottom-left corner of the resulting text.
+    color    -- Color of the text.
+    bold     -- If True, the text will be bold.
+    italic   -- If True, the text will be italic.
+    """
+    global _ctx
+    import pyglet
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
+    if (font, size) not in _ctx._fonts:
+        _ctx._fonts[(font, size)] = pyglet.text.Label(font_name=font, font_size=size)
+    label = _ctx._fonts[(font, size)]
+    label.text = text
+    label.x, label.y = position
+    label.color = tuple(map(lambda c: int(c*255), color))
+    label.bold = bold
+    label.italic = italic
+    label.draw()
 
 def set_camera(center=None, position=None, rotation=None, zoom=None):
     """Set properties of the camera. Only properties you set will be changed.
@@ -402,6 +462,8 @@ def set_camera(center=None, position=None, rotation=None, zoom=None):
     zoom     -- Zoom/scale of the camera. Value of 1 is no zoom, value of 2 is twice-scaled, etc.
     """
     global _ctx
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
     if center is not None:
         _ctx._camera.center = center
     if position is not None:
@@ -421,6 +483,8 @@ def move_camera(position=None, rotation=None, zoom=None):
     zoom      -- Number to multiply by the current zoom.
     """
     global _ctx
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
     if position is not None:
         _ctx._camera.position = (
             _ctx._camera.position[0] + position[0],
@@ -435,6 +499,8 @@ def move_camera(position=None, rotation=None, zoom=None):
 def save_camera():
     """Saves the current camera settings."""
     global _ctx
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
     _ctx._saved_cameras.append(_Camera(
         _ctx._camera.center,
         _ctx._camera.position,
@@ -445,6 +511,8 @@ def save_camera():
 def restore_camera():
     """Restores the most recently saved and not yet restored camera settings."""
     global _ctx
+    if _ctx._win is None:
+        raise EasyGameError('window not open')
     if len(_ctx._saved_cameras) == 0:
         raise EasyGameError('no saved camera')
     _ctx._camera = _ctx._saved_cameras.pop(-1)
