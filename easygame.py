@@ -472,7 +472,7 @@ def set_camera(center=None, position=None, rotation=None, zoom=None):
     if position is not None:
         _ctx._camera.position = position
     if rotation is not None:
-        _ctx._camera.rotation = rotate
+        _ctx._camera.rotation = rotation
     if zoom is not None:
         _ctx._camera.zoom = zoom
     _update_camera()
