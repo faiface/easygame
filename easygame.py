@@ -570,3 +570,17 @@ def play_audio(audio, channel=0, loop=False, volume=1):
     player.volume = volume
     _ctx._channels[channel] = player
     player.play()
+
+def fix_rectangle_overlap(rect1, rect2):
+    """Calculate the minimum vector required to move rect1 to fix the overlap between
+    rect1 and rect2.
+
+    Arguments:
+    rect1 -- The first rectangle. Has form (x0, y0, x1, y1).
+    rect2 -- The second rectangle. Has the same form as rect1.
+    """
+    ax0, ay0, ax1, ay1 = rect1
+    bx0, by0, bx1, by1 = rect2
+    left, right = max(0, ax1 - bx0), min(0, ax0 - bx1)
+    down, up    = max(0, ay1 - by0), min(0, ay0 - by1)
+    return (min(left, right, key=abs), min(down, up, key=abs))
