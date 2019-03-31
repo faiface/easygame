@@ -455,6 +455,25 @@ def draw_line(*points, thickness=1, color=(1, 1, 1, 1)):
             color=color,
         )
 
+def draw_circle(center, radius, color=(1, 1, 1, 1)):
+    """Draws a circle with the specified center and radius.
+
+    Example:
+      draw_circle((100, 100), 50, color=(1, 0, 0, 1))
+
+    Arguments:
+    center -- Coordinates of the center of the circle, in the form (x, y).
+    radius -- Radius of the circle.
+    color  -- Color of the line.
+    """
+    import math
+    x, y = center
+    pts = []
+    for i in range(32):
+        angle = i/32 * 2*math.pi
+        pts.append((x + math.cos(angle)*radius, y + math.sin(angle)*radius))
+    draw_polygon(*pts, color=color)
+
 def draw_text(text, font, size, position=(0, 0), color=(1, 1, 1, 1), bold=False, italic=False):
     """Draw text using the selected font, respecting the current camera settings.
 
