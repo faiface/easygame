@@ -583,4 +583,9 @@ def fix_rectangle_overlap(rect1, rect2):
     bx0, by0, bx1, by1 = rect2
     left, right = max(0, ax1 - bx0), min(0, ax0 - bx1)
     down, up    = max(0, ay1 - by0), min(0, ay0 - by1)
-    return (min(left, right, key=abs), min(down, up, key=abs))
+    move_x = min(left, right, key=abs)
+    move_y = min(down, up, key=abs)
+    if move_x < move_y:
+        return (move_x, 0)
+    else:
+        return (0, move_y)
