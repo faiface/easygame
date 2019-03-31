@@ -409,6 +409,9 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity
 def draw_polygon(*points, color=(1, 1, 1, 1)):
     """Draw a convex polygon, respecting the current camera settings.
 
+    Example:
+      draw_polygon((0, 0), (100, 300), (200, 0), color=(0, 1, 1, 1))
+
     Arguments:
     points -- List of points of the polygon. (Is taken by variadic arguments.)
     color  -- Color of the polygon. Components are: red, green, blue, alpha. 
