@@ -414,7 +414,7 @@ def draw_polygon(*points, color=(1, 1, 1, 1)):
 
     Arguments:
     points -- List of points of the polygon. (Is taken by variadic arguments.)
-    color  -- Color of the polygon. Components are: red, green, blue, alpha. 
+    color  -- Color of the polygon. Components are: red, green, blue, alpha.
     """
     global _ctx
     import pyglet
@@ -428,6 +428,32 @@ def draw_polygon(*points, color=(1, 1, 1, 1)):
         ('v2f', vertices),
         ('c4f', color * len(points)),
     )
+
+def draw_line(*points, thickness=1, color=(1, 1, 1, 1)):
+    """Draw a line between each two successive pair of points.
+
+    Example:
+      draw_line((0, 0), (100, 300), (200, 0), thickness=10 color=(0, 1, 1, 1))
+
+    Arguments:
+    points    -- List of points of the line. (Is taken by variadic arguments.)
+    thickness -- Width of the line.
+    color     -- Color of the line. Components are: red, green, blue, alpha.
+    """
+    import math
+    for i in range(len(points)-1):
+        x0, y0 = points[i]
+        x1, y1 = points[i+1]
+        dx, dy = x1 - x0, y1 - y0
+        length = math.hypot(dx, dy)
+        dx, dy = dx/length*thickness/2, dy/length*thickness/2
+        draw_polygon(
+            (x0 - dy, y0 + dx),
+            (x0 + dy, y0 - dx),
+            (x1 + dy, y1 - dx),
+            (x1 - dy, y1 + dx),
+            color=color,
+        )
 
 def draw_text(text, font, size, position=(0, 0), color=(1, 1, 1, 1), bold=False, italic=False):
     """Draw text using the selected font, respecting the current camera settings.
