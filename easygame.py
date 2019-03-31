@@ -545,7 +545,7 @@ def move_camera(position=None, rotation=None, zoom=None):
     _update_camera()
 
 def save_camera():
-    """Saves the current camera settings."""
+    """Save the current camera settings."""
     global _ctx
     if _ctx._win is None:
         raise EasyGameError('window not open')
@@ -557,7 +557,7 @@ def save_camera():
     ))
 
 def restore_camera():
-    """Restores the most recently saved and not yet restored camera settings."""
+    """Restore the most recently saved and not yet restored camera settings."""
     global _ctx
     if _ctx._win is None:
         raise EasyGameError('window not open')
@@ -565,6 +565,10 @@ def restore_camera():
         raise EasyGameError('no saved camera')
     _ctx._camera = _ctx._saved_cameras.pop(-1)
     _update_camera()
+
+def reset_camera():
+    """Reset camera to the original settings."""
+    set_camera(center=(0, 0), position=(0, 0), rotation=0, zoom=1)
 
 class _Audio:
     def __init__(self, snd):
