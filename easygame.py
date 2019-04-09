@@ -531,6 +531,7 @@ def move_camera(position=None, rotation=None, zoom=None):
     zoom      -- Number to multiply by the current zoom.
     """
     global _ctx
+    import math
     if _ctx._win is None:
         raise EasyGameError('window not open')
     if position is not None:
@@ -540,6 +541,10 @@ def move_camera(position=None, rotation=None, zoom=None):
         )
     if rotation is not None:
         _ctx._camera.rotation += rotation
+        while _ctx._camera.rotation >= 2*math.pi:
+            _ctx._camera.rotation -= 2*math.pi
+        while _ctx._camera.rotation < 0:
+            _ctx._camera.rotation += 2*math.pi
     if zoom is not None:
         _ctx._camera.zoom *= zoom
     _update_camera()
