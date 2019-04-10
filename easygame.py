@@ -358,7 +358,7 @@ def load_image(path):
     path -- Path to the image file. (For example 'images/crying_baby.png'.)
     """
     import pyglet
-    return _Image(pyglet.resource.image(path))
+    return _Image(pyglet.image.load(path))
 
 def load_sheet(path, frame_width, frame_height):
     """Load a sprite sheet from the specified path and slices it into frames of the specified size.
@@ -371,7 +371,7 @@ def load_sheet(path, frame_width, frame_height):
     frame_height -- Height of a single frame.
     """
     import pyglet
-    img = pyglet.resource.image(path)
+    img = pyglet.image.load(path)
     frames = []
     for x in map(lambda i: i * frame_width, range(img.width // frame_width)):
         for y in map(lambda i: i * frame_height, range(img.height // frame_height)):
@@ -606,7 +606,7 @@ def load_audio(path, streaming=False):
     streaming -- Whether to stream the file directly from the disk, or load it to the memory instead.
     """
     import pyglet
-    snd = pyglet.resource.media(path, streaming=streaming)
+    snd = pyglet.media.load(path, streaming=streaming)
     return _Audio(snd)
 
 def play_audio(audio, channel=0, loop=False, volume=1):
