@@ -386,14 +386,7 @@ def image_data(image):
     raw = image._img.get_image_data()
     pitch = raw.width * 4
     data = raw.get_data('RGBA', 4)
-    rows = []
-    for y in range(raw.height):
-        rows.append([])
-        for x in range(raw.width):
-            i = (y*raw.width + x) * 4
-            r, g, b, a = int(data[i+0])/255, int(data[i+1])/255, int(data[i+2])/255, int(data[i+3])/255
-            rows[y].append((r, g, b, a))
-    return rows
+    return (raw.width, raw.width, len(data))
 
 def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity=1):
     """Draw an image to the window, respecting the current camera settings.
