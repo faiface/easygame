@@ -395,27 +395,27 @@ def image_data(image):
             rows[y].append((r, g, b, a))
     return rows
 
-def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, scale_x=1, scale_y=1, opacity=1):
+def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, scale_x=1, scale_y=1, opacity=1, pixelated=False):
     """Draw an image to the window, respecting the current camera settings.
 
     Arguments:
-    image    -- The image to draw. (Obtained from load_image or load_sheet)
-    position -- Anchor's position on the screen. (Defaults to 0, 0.)
-    anchor   -- Anchor's position relative to the bottom-left corner of the image. (Defaults to the center.)
-    rotation -- Rotation of the image around the anchor in radians. (Defaults to 0.)
-    scale    -- Scale of the image around the anchor. (Defaults to 1.)
-    scale_x  -- Additional scale along X axis.
-    scale_y  -- Additional scale along Y axis.
-    opacity  -- Use 0 for completely transparent, 1 for completely opaque.
+    image     -- The image to draw. (Obtained from load_image or load_sheet)
+    position  -- Anchor's position on the screen. (Defaults to 0, 0.)
+    anchor    -- Anchor's position relative to the bottom-left corner of the image. (Defaults to the center.)
+    rotation  -- Rotation of the image around the anchor in radians. (Defaults to 0.)
+    scale     -- Scale of the image around the anchor. (Defaults to 1.)
+    scale_x   -- Additional scale along X axis.
+    scale_y   -- Additional scale along Y axis.
+    opacity   -- Use 0 for completely transparent, 1 for completely opaque.
+    pixelated -- If True, image will be pixelated when scaled.
     """
     global _ctx
-    import math
+    import math, pyglet
     if _ctx._win is None:
         raise EasyGameError('window not open')
 
     if anchor is None:
         anchor = image.center
-        #anchor = (anchor[0]*scale*scale_x, anchor[1]*scale*scale_y)
 
     image._img.anchor_x, image._img.anchor_y = anchor
     image._sprite.update(
@@ -426,6 +426,17 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, scale_x
         scale_y=scale*scale_y,
     )
     image._sprite.opacity = int(opacity * 255)
+
+    if pixelated:
+        tex = image._img.get_texture()
+        pyglet.gl.glBindTexture(pyglet.gl.GL_TEXTURE_2D, tex.id)
+        pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, pyglet.gl.GL_TEXTURE_MIN_FILTER, pyglet.gl.GL_NEAREST)
+        pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, pyglet.gl.GL_TEXTURE_MAG_FILTER, pyglet.gl.GL_NEAREST)
+    else:
+        pyglet.gl.glBindTexture(pyglet.gl.GL_TEXTURE_2D, tex.id)
+        pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, pyglet.gl.GL_TEXTURE_MIN_FILTER, pyglet.gl.GL_LINEAR)
+        pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, pyglet.gl.GL_TEXTURE_MAG_FILTER, pyglet.gl.GL_LINEAR)
+
     image._sprite.draw()
 
 def draw_polygon(*points, color=(1, 1, 1, 1)):
