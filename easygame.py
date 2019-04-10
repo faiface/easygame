@@ -391,7 +391,7 @@ def image_data(image):
         rows.append([])
         for x in range(raw.width):
             i = (y*raw.width + x) * 4
-            r, g, b, a = ord(data[i+0]), ord(data[i+1]), ord(data[i+2]), ord(data[i+3])
+            r, g, b, a = int(data[i+0])/255, int(data[i+1])/255, int(data[i+2])/255, int(data[i+3])/255
             rows[y].append((r, g, b, a))
     return rows
 
