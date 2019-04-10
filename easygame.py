@@ -358,7 +358,7 @@ def load_image(path):
     path -- Path to the image file. (For example 'images/crying_baby.png'.)
     """
     import pyglet
-    return _Image(pyglet.image.load(path))
+    return _Image(pyglet.resource.image(path))
 
 def load_sheet(path, frame_width, frame_height):
     """Load a sprite sheet from the specified path and slices it into frames of the specified size.
@@ -371,7 +371,7 @@ def load_sheet(path, frame_width, frame_height):
     frame_height -- Height of a single frame.
     """
     import pyglet
-    img = pyglet.image.load(path)
+    img = pyglet.resource.image(path)
     frames = []
     for x in map(lambda i: i * frame_width, range(img.width // frame_width)):
         for y in map(lambda i: i * frame_height, range(img.height // frame_height)):
@@ -395,7 +395,7 @@ def image_data(image):
             rows[y].append((r, g, b, a))
     return rows
 
-def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity=1):
+def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, scale_x=1, scale_y=1, opacity=1):
     """Draw an image to the window, respecting the current camera settings.
 
     Arguments:
@@ -404,6 +404,9 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity
     anchor   -- Anchor's position relative to the bottom-left corner of the image. (Defaults to the center.)
     rotation -- Rotation of the image around the anchor in radians. (Defaults to 0.)
     scale    -- Scale of the image around the anchor. (Defaults to 1.)
+    scale_x  -- Additional scale along X axis.
+    scale_y  -- Additional scale along Y axis.
+    opacity  -- Use 0 for completely transparent, 1 for completely opaque.
     """
     global _ctx
     import math
@@ -412,13 +415,15 @@ def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity
 
     if anchor is None:
         anchor = image.center
+        #anchor = (anchor[0]*scale*scale_x, anchor[1]*scale*scale_y)
 
     image._img.anchor_x, image._img.anchor_y = anchor
     image._sprite.update(
         x=position[0],
         y=position[1],
         rotation=-rotation/math.pi*180,
-        scale=scale,
+        scale_x=scale*scale_x,
+        scale_y=scale*scale_y,
     )
     image._sprite.opacity = int(opacity * 255)
     image._sprite.draw()
@@ -606,7 +611,7 @@ def load_audio(path, streaming=False):
     streaming -- Whether to stream the file directly from the disk, or load it to the memory instead.
     """
     import pyglet
-    snd = pyglet.media.load(path, streaming=streaming)
+    snd = pyglet.resource.media(path, streaming=streaming)
     return _Audio(snd)
 
 def play_audio(audio, channel=0, loop=False, volume=1):
