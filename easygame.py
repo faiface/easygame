@@ -378,6 +378,15 @@ def load_sheet(path, frame_width, frame_height):
             frames.append(img.get_region(x, y, frame_width, frame_height))
     return frames
 
+def image_data(image):
+    """Returns a list of RGBA values of pixels of the image.
+
+    The pixels are listed row by row.
+    """
+    raw = image._img.get_image_data()
+    pitch = raw.width * 4
+    return raw.get_data('RGBA', 4)
+
 def draw_image(image, position=(0, 0), anchor=None, rotation=0, scale=1, opacity=1):
     """Draw an image to the window, respecting the current camera settings.
 
