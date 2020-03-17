@@ -30,6 +30,7 @@ class _Camera:
 
 class _Context:
     _win = None
+    _fps = 60
     _events = []
     _camera = _Camera((0, 0), (0, 0), 0, 1)
     _saved_cameras = []
@@ -208,7 +209,7 @@ def open_window(title, width, height, fps=60):
         raise EasyGameError('window already open')
     pyglet.options['audio'] = ('openal', 'pulse', 'directsound', 'silent')
     _ctx._win = pyglet.window.Window(caption=title, width=width, height=height)
-    pyglet.clock.set_fps_limit(fps)
+    _ctx._fps = fps
     _ctx._win.switch_to()
     _ctx._camera = _Camera((0, 0), (0, 0), 0, 1)
     _ctx._saved_cameras = []
@@ -313,11 +314,14 @@ def poll_events():
 def next_frame():
     """Show the content of the window and waits until it's time for the next frame."""
     global _ctx
+    import time
     import pyglet
     if _ctx._win is None:
         raise EasyGameError('window not open')
     _ctx._win.flip()
-    pyglet.clock.tick()
+    dt = pyglet.clock.tick()
+    if dt < 1 / _ctx._fps:
+        time.sleep(1/_ctx._fps - dt)
 
 def fill(r, g, b):
     """Fill the whole window with a single color.
