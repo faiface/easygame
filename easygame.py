@@ -630,7 +630,7 @@ def load_audio(path, streaming=False):
     snd = pyglet.resource.media(path, streaming=streaming)
     return _Audio(snd)
 
-def play_audio(audio, channel=0, loop=False, volume=1):
+def play_audio(audio, channel=0, loop=False, volume=1, speed=1):
     """Play an audio on the specified channel.
 
     There's infinite number of channels. Playing an audio on a channel stops previous playback
@@ -644,11 +644,13 @@ def play_audio(audio, channel=0, loop=False, volume=1):
     channel -- The channel index.
     loop    -- If True, playback will repeat forever, or until stopped.
     volume  -- 0 for mute, 1 for normal volume.
+    speed   -- 1 for normal speed, 0.5 for 2x slowdown, 2 for 2x speed, etc.
     """
     global _ctx
     import pyglet
     if channel in _ctx._channels:
         _ctx._channels[channel].delete()
+        del _ctx._channels[channel]
     if audio is None:
         return
     player = pyglet.media.Player()
@@ -660,8 +662,17 @@ def play_audio(audio, channel=0, loop=False, volume=1):
     else:
         player.queue(audio._snd)
     player.volume = volume
+    player.pitch = speed
     _ctx._channels[channel] = player
     player.play()
+
+def playback_time(channel):
+    """Returns the current time of the audio playing on the channel in
+    seconds or 0 if the channel isn't active."""
+    global _ctx
+    if channel not in _ctx._channels:
+        return 0
+    return _ctx._channels[channel].time
 
 def fix_rectangle_overlap(rect1, rect2):
     """Calculate the minimum vector required to move rect1 to fix the overlap between
