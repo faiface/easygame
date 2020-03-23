@@ -253,6 +253,11 @@ def open_window(title, width, height, fps=60):
         _ctx._events.append(MouseMoveEvent(x, y, dx, dy))
 
     @_ctx._win.event
+    def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
+        global _ctx
+        _ctx._events.append(MouseMoveEvent(x, y, dx, dy))
+
+    @_ctx._win.event
     def on_mouse_press(x, y, symbol, modifiers):
         global _ctx
         button = _symbol_to_string(symbol)
