@@ -194,21 +194,25 @@ def _update_camera():
     pyglet.gl.glScalef(_ctx._camera.zoom, _ctx._camera.zoom, 1)
     pyglet.gl.glTranslatef(-_ctx._camera.position[0], -_ctx._camera.position[1], 0)
 
-def open_window(title, width, height, fps=60):
+def open_window(title, width, height, fps=60, double_buffer=True):
     """Open a window with the specified parameters. Only one window can be open at any time.
 
     Arguments:
-    title  -- Text at the top of the window.
-    width  -- Width of the window in pixels.
-    height -- Height of the window in pixels.
-    fps    -- Maximum number of frames per second. (Defaults to 60.)
+    title         -- Text at the top of the window.
+    width         -- Width of the window in pixels.
+    height        -- Height of the window in pixels.
+    fps           -- Maximum number of frames per second. (Defaults to 60.)
+    double_buffer -- Use False for a single-buffered window. Only use this if you are Tellegar or know what you are doing.
     """
     global _ctx
     import pyglet
     if _ctx._win is not None:
         raise EasyGameError('window already open')
     pyglet.options['audio'] = ('openal', 'pulse', 'directsound', 'silent')
-    _ctx._win = pyglet.window.Window(caption=title, width=width, height=height)
+    config = None
+    if not double_buffer:
+        config = pyglet.gl.Config(double_buffer = False)
+    _ctx._win = pyglet.window.Window(caption=title, width=width, height=height, config=config)
     _ctx._fps = fps
     _ctx._win.switch_to()
     _ctx._camera = _Camera((0, 0), (0, 0), 0, 1)
@@ -225,6 +229,7 @@ def open_window(title, width, height, fps=60):
     def on_close():
         global _ctx
         _ctx._events.append(CloseEvent())
+        return pyglet.event.EVENT_HANDLED
 
     @_ctx._win.event
     def on_key_press(symbol, modifiers):
@@ -233,6 +238,7 @@ def open_window(title, width, height, fps=60):
         if key is None:
             return
         _ctx._events.append(KeyDownEvent(key))
+        return pyglet.event.EVENT_HANDLED
 
     @_ctx._win.event
     def on_key_release(symbol, modifiers):
@@ -241,21 +247,25 @@ def open_window(title, width, height, fps=60):
         if key is None:
             return
         _ctx._events.append(KeyUpEvent(key))
+        return pyglet.event.EVENT_HANDLED
 
     @_ctx._win.event
     def on_text(text):
         global _ctx
         _ctx._events.append(TextEvent(text))
+        return pyglet.event.EVENT_HANDLED
 
     @_ctx._win.event
     def on_mouse_motion(x, y, dx, dy):
         global _ctx
         _ctx._events.append(MouseMoveEvent(x, y, dx, dy))
+        return pyglet.event.EVENT_HANDLED
 
     @_ctx._win.event
     def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
         global _ctx
         _ctx._events.append(MouseMoveEvent(x, y, dx, dy))
+        return pyglet.event.EVENT_HANDLED
 
     @_ctx._win.event
     def on_mouse_press(x, y, symbol, modifiers):
@@ -264,6 +274,7 @@ def open_window(title, width, height, fps=60):
         if button is None:
             return
         _ctx._events.append(MouseDownEvent(x, y, button))
+        return pyglet.event.EVENT_HANDLED
 
     @_ctx._win.event
     def on_mouse_release(x, y, symbol, modifiers):
@@ -272,6 +283,7 @@ def open_window(title, width, height, fps=60):
         if button is None:
             return
         _ctx._events.append(MouseUpEvent(x, y, button))
+        return pyglet.event.EVENT_HANDLED
 
 def close_window():
     """Close the window. Raises an exception if no window is open."""
@@ -660,10 +672,14 @@ def play_audio(audio, channel=0, loop=False, volume=1, speed=1):
         return
     player = pyglet.media.Player()
     if loop:
-        looper = pyglet.media.SourceGroup(audio._snd.audio_format, None)
-        looper.loop = True
-        looper.queue(audio._snd)
-        player.queue(looper)
+        #looper = pyglet.media.SourceGroup() #audio._snd.audio_format
+        #looper.add(audio._snd)
+        #looper.loop = True
+        #player.queue(looper)
+        #player.loop = True
+        player.queue(audio._snd)
+        player.queue(audio._snd)
+        print('WAT')
     else:
         player.queue(audio._snd)
     player.volume = volume

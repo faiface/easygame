@@ -194,21 +194,25 @@ def _update_camera():
     pyglet.gl.glScalef(_ctx._camera.zoom, _ctx._camera.zoom, 1)
     pyglet.gl.glTranslatef(-_ctx._camera.position[0], -_ctx._camera.position[1], 0)
 
-def open_window(title, width, height, fps=60):
+def open_window(title, width, height, fps=60, double_buffer=True):
     """Open a window with the specified parameters. Only one window can be open at any time.
 
     Arguments:
-    title  -- Text at the top of the window.
-    width  -- Width of the window in pixels.
-    height -- Height of the window in pixels.
-    fps    -- Maximum number of frames per second. (Defaults to 60.)
+    title         -- Text at the top of the window.
+    width         -- Width of the window in pixels.
+    height        -- Height of the window in pixels.
+    fps           -- Maximum number of frames per second. (Defaults to 60.)
+    double_buffer -- Use False for a single-buffered window. Only use this if you are Tellegar or know what you are doing.
     """
     global _ctx
     import pyglet
     if _ctx._win is not None:
         raise EasyGameError('window already open')
     pyglet.options['audio'] = ('openal', 'pulse', 'directsound', 'silent')
-    _ctx._win = pyglet.window.Window(caption=title, width=width, height=height)
+    config = None
+    if not double_buffer:
+        config = pyglet.gl.Config(double_buffer = False)
+    _ctx._win = pyglet.window.Window(caption=title, width=width, height=height, config=config)
     _ctx._fps = fps
     _ctx._win.switch_to()
     _ctx._camera = _Camera((0, 0), (0, 0), 0, 1)
